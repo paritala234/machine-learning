@@ -1,0 +1,141 @@
+---
+title: "ML-Assignment4"
+author: "sai rohan paritala"
+date: "2022-11-02"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(factoextra) # clustering algorithms & visualization
+library(ISLR)
+library(caret)
+```
+
+#Importing the dataset
+```{r}
+P<- read.csv("Pharmaceuticals.csv")
+summary(P)
+```
+
+# a. Use only the numerical variables (1 to 9) to cluster the 21 firms. Justify the various choices made in conducting the cluster analysis, such as weights for different variables, the specific clustering algorithm(s) used, the number of clusters formed, and so on.
+
+#Remove missing data and rescale variables for comparability before clustering data.
+```{r}
+Pharma<- na.omit(P) #gives the data after removing the missing values.
+Pharma
+```
+
+#To cluster the 21 firms, just the quantitative variables (1-9) need be collected.
+```{r}
+row.names(Pharma)<- Pharma[,1]
+Pharma1<- Pharma[,3:11]
+head(Pharma1)
+```
+
+#Scale all the dataframe's quantitative variables
+```{r}
+Pharma2<-scale(Pharma1)
+head(Pharma2)
+```
+
+##Determining the no of clusters to do the cluster analysis using Elbow Method
+```{r}
+fviz_nbclust(Pharma2, kmeans, method = "wss") + labs(subtitle = "Elbow Method")
+```
+
+##Using Silhouette method for determining no of clusters
+```{r}
+fviz_nbclust(Pharma2, kmeans, method = "silhouette")+ labs(subtitle = "Silhouette Method")
+```
+
+The number of clusters is 5 in the above plots, which is sufficient to display the data 
+variations.
+
+```{r}
+set.seed(64060)
+k5<- kmeans(Pharma2,centers=5,nstart = 25) 
+```
+
+#Visualizing the output
+```{r}
+k5$centers  #for centroids
+fviz_cluster(k5,data = Pharma2) # to Visualize the clusters
+k5
+distance<- dist(Pharma2, method = "euclidean")
+fviz_dist(distance)
+```
+#Using K-Means Cluster Analysis-  to Fit the data with 5 clusters
+```{r}
+fit<-kmeans(Pharma2,5)
+```
+
+#calculating the mean of all quantitative variables in each cluster
+```{r}
+aggregate(Pharma2,by=list(fit$cluster),FUN=mean)
+```
+
+```{r}
+Pharma3<-data.frame(Pharma2,fit$cluster)
+Pharma3
+```
+
+#view of the cluster plot
+```{r}
+library(cluster)
+clusplot(Pharma2,fit$cluster,color = TRUE,shade = TRUE,labels = 2,lines = 0)
+```
+
+
+#b.Interpret the clusters with respect to the numerical variables used in forming the clusters.
+values of all quantitative variables in each cluster.
+Cluster 1 - JNJ, MRK, PFE, GSK 
+Cluster 1 has highest Market_cap,ROA,ROE,Asset_Turnover and lowest is Beta,PE_Ratio.
+
+Cluster 2 - AHM,WPI,AVE  
+Cluster 2 has highest Rev_Growth and lowest PE_Ratio, Asset_Turnover
+
+Cluster 3 - CHTT,ELN,MRX,IVX 
+Cluster 3 has highest Beta, Leverage and lowest Market_Cap, ROE, ROA, Leverage, Rev_Growth, Net_Profit_Margin.
+
+Cluster 4 - BAY,PHA,AGN 
+Cluster 4 has highest PE_Ratio and lowest Leverage, Asset_Turnover.
+
+Cluster 5 - AZN,ABT,NVS,BMY,WYE,SGP,LLY 
+Cluster 5 has highest Net_Profit_Margin and lowest leverage,Beta. 
+
+# c.s there a pattern in the clusters with respect to the numerical variables (10 to 12)? (those not used in forming the clusters)  
+there is a pattern in the clusters.
+
+Cluster 1 with highest Market_Cap, highest ROE, highest ROA, highest Asset_Turnover has equal Hold and Moderate Buy Recommendation.
+
+Cluster 2 with lowest PE_Ratio and lowest Asset_Turnover has Hold Recommendation.
+
+Cluster-3 with highest Beta, highest Leverage has mostly Moderate Buy Recommendation.
+
+Cluster 4 with highest PE_Ratio has Hold Recommendation.
+
+Cluster 5 with highest Net_Profit_Margin has mostly Hold Recommendation.
+
+In terms of variables, I have seen a pattern among the clusters (10 to 12)
+
+Clusters 1,3 has mostly Moderate Buy Recommendation
+
+Clusters 1,2,4,5 has Hold Recommendation
+
+# d.Provide an appropriate name for each cluster using any or all of the variables in the dataset. 
+Cluster-1 - Moderate Buy (or) Hold cluster.
+
+Cluster-2 - Low PE_Ratio, Asset_Turnover cluster (or) Hold cluster.
+
+Cluster-3 - High Beta, Leverage cluster (or) Buy Cluster.
+
+Cluster-4 - High PE_Ratio cluster (or) High Hold cluster.
+
+Cluster-5 - High Net_Profit_Margin cluster (or) High Hold cluster.
